@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/CS3028-Charlie/Backend/issues"
   },
-  "homepage": "https://github.com/CS3028-Charlie/Backend#readme"
+  "homepage": "https://github.com/CS3028-Charlie/Backend#readme",
+  "dependencies": {
+    "express": "^4.21.1"
+  }
 }
