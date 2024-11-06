@@ -7,6 +7,8 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
+app.use(cors({ origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com' }));
+
 // Middleware
 app.use(express.json());  // For parsing JSON
 app.use(cors({
@@ -22,7 +24,8 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
-app.use('/api/auth', authRoutes);  // Route for authentication
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
