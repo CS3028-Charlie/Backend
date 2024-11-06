@@ -27,5 +27,9 @@ app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
 
-const cors = require('cors');
-app.use(cors()); // Enable CORS for all routes
+// Allow CORS from specific frontend URL
+app.use(cors({
+  origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com/login.html', // Allow your frontend's domain
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true // If you are sending cookies or sessions
+}));
