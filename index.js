@@ -7,10 +7,6 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
-app.use(cors({ origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com' }));
-
-// Middleware
-app.use(express.json());  // For parsing JSON
 app.use(cors({
   origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com', // Allow requests from frontend
   credentials: true
