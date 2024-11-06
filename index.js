@@ -1,5 +1,6 @@
 require('dotenv').config(); // Load environment variables
 
+const cors = require('cors');
 const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
@@ -29,7 +30,7 @@ app.listen(port, () => {
 
 // Allow CORS from specific frontend URL
 app.use(cors({
-  origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com/login.html', // Allow your frontend's domain
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true // If you are sending cookies or sessions
+  origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com',  // Allow frontend app
+  methods: ['GET', 'POST'],
+  credentials: true  // Include cookies if needed
 }));
