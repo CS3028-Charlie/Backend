@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/auth.js');
 app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
