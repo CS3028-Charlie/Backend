@@ -26,3 +26,6 @@ mongoose.connect(MONGODB_URI, {  // Use MONGODB_URI directly here
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
+
+const cors = require('cors');
+app.use(cors()); // Enable CORS for all routes
