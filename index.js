@@ -9,8 +9,12 @@ const app = express();
 
 app.use(cors({
   origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com', // Allow requests from frontend
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(express.json()); // Middleware to parse JSON
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
