@@ -1,11 +1,13 @@
 require('dotenv').config(); // Load environment variables
 
-const cors = require('cors');
 const express = require('express');
 const mongoose = require('mongoose');
-const port = process.env.PORT || 3000;
+const multer = require("multer");
+const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
+const port = process.env.PORT || 3000;
 
 app.use(cors({
   origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com', // Allow requests from frontend
@@ -27,8 +29,67 @@ mongoose.connect(process.env.MONGO_URI, {
 const authRoutes = require('./routes/auth.js');
 app.use('/api/auth', authRoutes);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let path = `assets/templates/${req.body.title}`
+
+    // create directory if it doesnt exist
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path);
+    }
+
+    cb(null, path)
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname)
+  }
+})
+
+const upload = multer({
+  limits: { fileSize: 20000000}, // 20MB
+  storage: storage
+})
+
+app.get('/get_card_previews', (req, res) => {
+  const cardFolders = fs.readdirSync("assets/templates")
+
+  res.json({
+    cards: cardFolders
+  })
+});
+
+app.post("/upload_card", upload.array("images"), (req, res) => {
+  res.json({
+    message: "Success"
+  })
+});
+
+app.post("/delete_card", (req, res) => {
+  const dir = req.body.card
+  const path = `assets/templates/${dir}`
+
+  // return if already deleted
+  const cards = fs.readdirSync("assets/templates");
+  if (!cards.includes(req.body.card)) { return res.status(200) }
+
+  const files = fs.readdirSync(path);
+
+  try {
+    // delete directory contents
+    for (const file of files) {
+      fs.unlinkSync(`${path}/${file}`);
+    }
+    // delete directory
+    fs.rmdirSync(path);
+
+    res.status(200)
+
+  } catch (err) {
+    console.error(err)
+
+    res.status(400)
+  }
+
 });
 
 app.use("/assets", express.static("assets"));
