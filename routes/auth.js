@@ -7,26 +7,37 @@ const authenticate = require('../middleware/auth');
 const router = express.Router();
 
 // Registration route
+const Joi = require('joi');
+
 router.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const schema = Joi.object({
+    username: Joi.string().alphanum().min(3).max(20).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(8).required(),
+  });
+
+  const { error } = schema.validate(req.body);
+  if (error) return res.status(400).json({ message: error.details[0].message });
 
   try {
+    const { username, email, password } = req.body;
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'User with this email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ username, email, password: hashedPassword });
-
     await newUser.save();
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: newUser._id, username: newUser.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(201).json({ token });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // Login route
 router.post('/login', async (req, res) => {
