@@ -9,12 +9,14 @@ const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors({
-  origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com', // Allow requests from frontend
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// app.use(cors({
+//   origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com', // Allow requests from frontend
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization']
+// }));
+
+app.use(cors())
 
 app.use(express.json()); // Middleware to parse JSON
 
@@ -82,12 +84,12 @@ app.post("/delete_card", (req, res) => {
     // delete directory
     fs.rmdirSync(path);
 
-    res.status(200)
+    res.status(200).send("ok")
 
   } catch (err) {
     console.error(err)
 
-    res.status(400)
+    res.status(400).send("error")
   }
 
 });
