@@ -2,27 +2,26 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const authenticate = require('../middleware/auth');
-
-const router = express.Router();
-
-// Registration route
+const { authenticate } = require('../middleware/auth'); // Correctly destructure
 const Joi = require('joi');
 
-const SECRET = process.env.JWT_SECRET
+const router = express.Router();
+const SECRET = process.env.JWT_SECRET; // Move to top to avoid redeclaring
 
+// Registration route
 router.post('/register', async (req, res) => {
   const schema = Joi.object({
     username: Joi.string().alphanum().min(3).max(20).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
+    role: Joi.string().valid('user', 'admin', 'pupil', 'teacher', 'parent').required(),
   });
 
   const { error } = schema.validate(req.body);
   if (error) return res.status(400).json({ message: error.details[0].message });
 
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -30,10 +29,16 @@ router.post('/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, email, password: hashedPassword });
+    const newUser = new User({ username, email, password: hashedPassword, role });
     await newUser.save();
 
-    const token = jwt.sign({ id: newUser._id, username: newUser.username }, SECRET, { expiresIn: '1h' });
+    // Include role in token payload
+    const token = jwt.sign(
+      { id: newUser._id, username: newUser.username, role: newUser.role },
+      SECRET,
+      { expiresIn: '1h' }
+    );
+
     res.status(201).json({ token });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -52,9 +57,14 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const SECRET = process.env.JWT_SECRET
-    const token = jwt.sign({ id: user._id, username: user.username }, SECRET, { expiresIn: '1h' });
-    res.json({ token, username: user.username });
+    // Include role in token payload
+    const token = jwt.sign(
+      { id: user._id, username: user.username, role: user.role }, 
+      SECRET, 
+      { expiresIn: '1h' }
+    );
+
+    res.json({ token, username: user.username, role: user.role });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
