@@ -2,11 +2,11 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { authenticate } = require('../middleware/auth'); // Correctly destructure
+const { authenticate } = require('../middleware/auth');
 const Joi = require('joi');
 
 const router = express.Router();
-const SECRET = process.env.JWT_SECRET; // Move to top to avoid redeclaring
+const SECRET = process.env.JWT_SECRET;
 
 // Registration route
 router.post('/register', async (req, res) => {
@@ -24,27 +24,25 @@ router.post('/register', async (req, res) => {
     const { username, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User with this email already exists' });
-    }
+    if (existingUser) return res.status(400).json({ message: 'User with this email already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, email, password: hashedPassword, role });
+    const balance = role === 'pupil' ? 0 : undefined; // Initialize balance for pupils
+
+    const newUser = new User({ username, email, password: hashedPassword, role, balance });
     await newUser.save();
 
-    // Include role in token payload
     const token = jwt.sign(
       { id: newUser._id, username: newUser.username, role: newUser.role },
       SECRET,
       { expiresIn: '1h' }
     );
 
-    res.status(201).json({ token });
+    res.status(201).json({ token, username: newUser.username, role: newUser.role, balance: balance || 0 });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -57,14 +55,13 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Include role in token payload
     const token = jwt.sign(
-      { id: user._id, username: user.username, role: user.role }, 
-      SECRET, 
+      { id: user._id, username: user.username, role: user.role },
+      SECRET,
       { expiresIn: '1h' }
     );
 
-    res.json({ token, username: user.username, role: user.role });
+    res.json({ username: user.username, role: user.role, balance: user.balance || 0, token });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -74,10 +71,46 @@ router.post('/login', async (req, res) => {
 router.get('/user', authenticate, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching user data' });
   }
+});
+
+// Get user balance (only for logged-in pupils)
+router.get('/balance', authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.role !== 'pupil') return res.status(403).json({ message: 'Access denied' });
+
+    res.json({ balance: user.balance });
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/topup', authenticate, async (req, res) => {
+  const { email, amount } = req.body;
+  const userRole = req.user.role;
+
+  if (userRole !== 'teacher' && userRole !== 'parent') {
+      return res.status(403).json({ message: 'Unauthorized: Only teachers and parents can top-up credits.' });
+  }
+
+  const pupil = await User.findOne({ email, role: 'pupil' });
+  if (!pupil) {
+      return res.status(404).json({ message: 'Pupil not found.' });
+  }
+
+  pupil.balance += amount;
+  await pupil.save();
+
+  res.json({ message: `Added ${amount} credits to ${email}.`, newBalance: pupil.balance });
 });
 
 module.exports = router;
