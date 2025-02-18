@@ -45,4 +45,20 @@ router.post("/add-credits", authenticate, async (req, res) => {
     }
 });
 
+app.delete("/api/classroom/remove-students", authenticateToken, async (req, res) => {
+    const { emails } = req.body;
+    const teacherId = req.user.id;
+
+    try {
+        const students = await User.find({ email: { $in: emails }, teacherId });
+
+        if (students.length === 0) return res.status(404).json({ message: "No matching students found" });
+
+        await User.deleteMany({ email: { $in: emails }, teacherId });
+        res.json({ message: `${students.length} students removed successfully` });
+    } catch (error) {
+        res.status(500).json({ message: "Error removing students" });
+    }
+});
+
 module.exports = router;
