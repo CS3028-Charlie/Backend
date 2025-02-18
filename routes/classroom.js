@@ -45,7 +45,7 @@ router.post("/add-credits", authenticate, async (req, res) => {
     }
 });
 
-app.delete("/api/classroom/remove-students", authenticateToken, async (req, res) => {
+app.delete("/remove-students", authenticate, async (req, res) => {
     const { emails } = req.body;
     const teacherId = req.user.id;
 
