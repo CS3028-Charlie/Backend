@@ -4,44 +4,48 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { authenticate } = require('../middleware/auth');
 const Joi = require('joi');
+const mongoose = require("mongoose"); // Ensure mongoose is imported
 
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET;
 
-// Registration route
-router.post('/register', async (req, res) => {
-  const schema = Joi.object({
-    username: Joi.string().alphanum().min(3).max(20).required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().min(8).required(),
-    role: Joi.string().valid('user', 'admin', 'pupil', 'teacher', 'parent').required(),
-  });
+// Function to generate a random unique ID
+function generateRandomTeacherId() {
+    return new mongoose.Types.ObjectId().toHexString(); // Generates a unique ID
+}
 
-  const { error } = schema.validate(req.body);
-  if (error) return res.status(400).json({ message: error.details[0].message });
-
-  try {
+router.post("/register", async (req, res) => {
     const { username, email, password, role } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'User with this email already exists' });
+    try {
+        // Check if email already exists
+        let existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already in use" });
+        }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const balance = role === 'pupil' ? 0 : undefined; // Initialize balance for pupils
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ username, email, password: hashedPassword, role, balance });
-    await newUser.save();
+        // Generate a random teacherId for teachers
+        const teacherId = role === "teacher" ? generateRandomTeacherId() : "";
 
-    const token = jwt.sign(
-      { id: newUser._id, username: newUser.username, role: newUser.role },
-      SECRET,
-      { expiresIn: '1h' }
-    );
+        // Create new user
+        const newUser = new User({
+            username,
+            email,
+            password: hashedPassword,
+            role,
+            teacherId, // Assign teacherId only if the role is 'teacher'
+        });
 
-    res.status(201).json({ token, username: newUser.username, role: newUser.role, balance: balance || 0 });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
+        await newUser.save();
+
+        res.status(201).json({ message: "User registered successfully", user: newUser });
+    } catch (error) {
+        console.error("Error registering user:", error);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 // Login route
@@ -85,7 +89,7 @@ router.get('/balance', authenticate, async (req, res) => {
     const user = await User.findById(req.user.id);
 
     if (!user) return res.status(404).json({ message: 'User not found' });
-    if (user.role !== 'pupil') return res.status(403).json({ message: 'Access denied' });
+    // if (user.role !== 'pupil') return res.status(403).json({ message: 'Access denied' });
 
     res.json({ balance: user.balance });
   } catch (error) {
@@ -99,7 +103,7 @@ router.post('/topup', authenticate, async (req, res) => {
   const userRole = req.user.role;
 
   if (userRole !== 'teacher' && userRole !== 'parent') {
-      return res.status(403).json({ message: 'Unauthorized: Only teachers and parents can top-up credits.' });
+      return res.status(403).json({ message: 'Unauthorised: Only teachers and parents can top-up credits.' });
   }
 
   const pupil = await User.findOne({ email, role: 'pupil' });

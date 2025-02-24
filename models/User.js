@@ -1,11 +1,12 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin', 'teacher', 'parent', 'pupil'], default: 'user', required: true },
-  balance: { type: Number, default: 0 }  // Only relevant for pupil accounts
+    username: String,
+    email: String,
+    password: String,
+    role: { type: String, enum: ["user", "admin", "teacher", "pupil"], default: "user" },
+    balance: { type: Number, default: 0 },
+    teacherId: { type: String, default: "" } // Stores the teacher's ID
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);
