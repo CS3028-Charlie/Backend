@@ -31,6 +31,10 @@ mongoose.connect(process.env.MONGO_URI, {
 const authRoutes = require('./routes/auth.js');
 app.use('/api/auth', authRoutes);
 
+const paypalRoutes = require('./routes/paypal.js');
+app.use('/api/payment', paypalRoutes);
+
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     let path = `assets/templates/${req.body.title}`
