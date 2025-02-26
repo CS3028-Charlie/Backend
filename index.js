@@ -100,6 +100,8 @@ app.post("/delete_card", (req, res) => {
 
 app.use("/assets", express.static("assets"));
 
+app.use("/api/classroom", require("./routes/classroom"));
+
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
