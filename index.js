@@ -10,6 +10,7 @@ const originalFs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const draftsRoutes = require('./routes/drafts');
 
 // app.use(cors({
 //   origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com', // Allow requests from frontend
@@ -17,6 +18,8 @@ const port = process.env.PORT || 3000;
 //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 //   allowedHeaders: ['Content-Type', 'Authorization']
 // }));
+
+app.use('/api/drafts', draftsRoutes);
 
 app.use(cors());
 
