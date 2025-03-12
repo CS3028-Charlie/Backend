@@ -117,4 +117,29 @@ router.post('/topup', authenticate, async (req, res) => {
   res.json({ message: `Added ${amount} credits to ${email}.`, newBalance: pupil.balance });
 });
 
+// Delete user account
+router.delete('/delete-account', authenticate, async (req, res) => {
+    const { password } = req.body;
+    
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid password' });
+        }
+
+        // Delete the user
+        await User.findByIdAndDelete(req.user.id);
+        res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ message: 'Error deleting account' });
+    }
+});
+
 module.exports = router;
