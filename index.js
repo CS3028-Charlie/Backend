@@ -11,14 +11,16 @@ const originalFs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// app.use(cors({
-//   origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com', // Allow requests from frontend
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization']
-// }));
+// CORS configuration
+const corsOptions = {
+    origin: ['https://charlie-card-frontend-2-267b7f36cb99.herokuapp.com', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
 
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Add headers for image serving
 app.use((req, res, next) => {

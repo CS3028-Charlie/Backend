@@ -4,8 +4,17 @@ const { authenticate } = require("../middleware/auth");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 
+// Add OPTIONS handler for CORS preflight
+router.options("/purchase", (req, res) => {
+    res.header('Access-Control-Allow-Origin', 'https://charlie-card-frontend-2-267b7f36cb99.herokuapp.com');
+    res.header('Access-Control-Allow-Methods', 'POST');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).send();
+});
+
 // Purchase card endpoint
 router.post("/purchase", authenticate, async (req, res) => {
+    res.header('Access-Control-Allow-Origin', 'https://charlie-card-frontend-2-267b7f36cb99.herokuapp.com');
     const session = await mongoose.startSession();
     session.startTransaction();
 
