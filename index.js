@@ -13,22 +13,28 @@ const port = process.env.PORT || 3000;
 
 // CORS configuration
 const corsOptions = {
-    origin: ['https://charlie-card-frontend-2-267b7f36cb99.herokuapp.com', 'http://localhost:3000'],
+    origin: true, // Allow any origin
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Type', 'Content-Disposition'],
+    exposedHeaders: ['Content-Type', 'Content-Disposition', 'Content-Length'],
     credentials: true,
     maxAge: 86400,
+    preflightContinue: true,
     optionsSuccessStatus: 200
 };
 
-// Apply CORS before other middleware
+// Apply CORS before any other middleware
 app.use(cors(corsOptions));
 
-// Remove the existing image headers middleware and replace with this
+// Enable pre-flight requests for all routes
+app.options('*', cors(corsOptions));
+
+// Global middleware to handle CORS headers
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Origin', '*');
     res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
     next();
 });
@@ -48,7 +54,6 @@ app.use('/api/auth', authRoutes);
 
 const paypalRoutes = require('./routes/paypal.js');
 app.use('/api/payment', paypalRoutes);
-
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

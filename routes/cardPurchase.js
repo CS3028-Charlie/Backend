@@ -1,36 +1,30 @@
 const express = require("express");
 const router = express.Router();
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 const { authenticate } = require("../middleware/auth");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 
 // Purchase card endpoint
-router.post("/purchase", authenticate, async (req, res) => {
+router.post("/purchase", upload.single('imageData'), authenticate, async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-        // Set CORS headers explicitly
-        res.header('Access-Control-Allow-Origin', req.headers.origin);
+        // Set CORS headers for the response
+        res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Credentials', 'true');
         
-        const { type, imageData } = req.body;
+        const { type } = req.body;
         const requiredCredits = type === 'eCard' ? 100 : 200;
 
         // Find the user and include balance field
-        const user = await User.findById(req.user.id)
-            .session(session);
+        const user = await User.findById(req.user.id).session(session);
 
         if (!user) {
             throw new Error('User not found');
         }
-
-        console.log('Balance check:', {
-            userId: user._id,
-            currentBalance: user.balance,
-            requiredCredits: requiredCredits,
-            type: type
-        });
 
         // Check if user has enough balance
         if (user.balance < requiredCredits) {
@@ -57,21 +51,7 @@ router.post("/purchase", authenticate, async (req, res) => {
 
         await session.commitTransaction();
 
-        // Send the file as download
-        if (imageData) {
-            const base64Data = imageData.replace(/^data:image\/png;base64,/, "");
-            const buffer = Buffer.from(base64Data, 'base64');
-            
-            res.writeHead(200, {
-                'Access-Control-Allow-Origin': req.headers.origin,
-                'Access-Control-Allow-Credentials': 'true',
-                'Content-Type': 'image/png',
-                'Content-Disposition': `attachment; filename=${type}-${Date.now()}.png`,
-                'Content-Length': buffer.length
-            });
-            return res.end(buffer);
-        }
-
+        // Send success response
         return res.status(200).json({
             message: 'Purchase successful',
             remainingBalance: user.balance
