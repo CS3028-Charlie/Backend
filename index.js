@@ -16,18 +16,20 @@ const corsOptions = {
     origin: ['https://charlie-card-frontend-2-267b7f36cb99.herokuapp.com', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Type', 'Content-Disposition'],
     credentials: true,
+    maxAge: 86400,
     optionsSuccessStatus: 200
 };
 
+// Apply CORS before other middleware
 app.use(cors(corsOptions));
 
-// Add headers for image serving
+// Remove the existing image headers middleware and replace with this
 app.use((req, res, next) => {
-    if (req.path.match(/\.(jpg|jpeg|png|gif)$/i)) {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    }
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
     next();
 });
 
