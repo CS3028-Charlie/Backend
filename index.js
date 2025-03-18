@@ -10,25 +10,32 @@ const originalFs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const draftsRoutes = require('./routes/drafts');
 
-// app.use(cors({
-//   origin: 'https://charlie-card-frontend-4e147d877237.herokuapp.com', // Allow requests from frontend
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization']
-// }));
+// CORS configuration
+const corsOptions = {
+    origin: true, // Allow any origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Type', 'Content-Disposition', 'Content-Length'],
+    credentials: true,
+    maxAge: 86400,
+    preflightContinue: true,
+    optionsSuccessStatus: 200
+};
 
-app.use('/api/drafts', draftsRoutes);
+// Apply CORS before any other middleware
+app.use(cors(corsOptions));
 
-app.use(cors());
+// Enable pre-flight requests for all routes
+app.options('*', cors(corsOptions));
 
-// Add headers for image serving
+// Global middleware to handle CORS headers
 app.use((req, res, next) => {
-    if (req.path.match(/\.(jpg|jpeg|png|gif)$/i)) {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    }
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
     next();
 });
 
@@ -47,7 +54,6 @@ app.use('/api/auth', authRoutes);
 
 const paypalRoutes = require('./routes/paypal.js');
 app.use('/api/payment', paypalRoutes);
-
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -137,6 +143,7 @@ app.post("/upload_card", upload.array("images"), (req, res) => {
 app.use("/assets", express.static("assets"));
 
 app.use("/api/classroom", require("./routes/classroom"));
+app.use("/api/cardPurchase", require("./routes/cardPurchase"));
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
