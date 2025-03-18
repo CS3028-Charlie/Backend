@@ -22,7 +22,7 @@ const corsOptions = {
     preflightContinue: true,
     optionsSuccessStatus: 200
 };
-
+ 
 // Apply CORS before any other middleware
 app.use(cors(corsOptions));
 
