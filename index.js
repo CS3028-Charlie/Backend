@@ -145,9 +145,11 @@ app.use("/assets", express.static("assets"));
 app.use("/api/classroom", require("./routes/classroom"));
 app.use("/api/cardPurchase", require("./routes/cardPurchase"));
 
+const draftsRoutes = require('./routes/drafts.js');
+app.use('/api/drafts', draftsRoutes);
+
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
 
-const draftsRoutes = require('./routes/drafts.js');
-app.use('/api/drafts', draftsRoutes);
+
