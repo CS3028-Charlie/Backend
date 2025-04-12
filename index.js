@@ -148,3 +148,6 @@ app.use("/api/cardPurchase", require("./routes/cardPurchase"));
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
+
+const draftsRoutes = require('./routes/drafts.js');
+app.use('/api/drafts', draftsRoutes);
