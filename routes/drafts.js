@@ -3,7 +3,7 @@ const router = express.Router();
 const Draft = require('../models/Draft');
 const { authenticate } = require('../middleware/auth');
 
-// 获取用户所有草稿
+// Get all drafts of the user 获取用户所有草稿
 router.get('/', authenticate, async (req, res) => {
     try {
         const drafts = await Draft.find({ userId: req.user.id }).sort({ updatedAt: -1 });
@@ -13,7 +13,7 @@ router.get('/', authenticate, async (req, res) => {
     }
 });
 
-// 获取单个草稿
+// Get single draft 获取单个草稿
 router.get('/:id', authenticate, async (req, res) => {
     try {
         const draft = await Draft.findOne({ _id: req.params.id, userId: req.user.id });
@@ -26,10 +26,18 @@ router.get('/:id', authenticate, async (req, res) => {
     }
 });
 
-// 创建新草稿
+// Create new draft 创建新草稿
 router.post('/', authenticate, async (req, res) => {
     try {
         const { name, cardIndex, cardType, images, activeTexts, stickers } = req.body;
+
+        // 检查当前用户是否已有同名草稿（Check for duplicate draft name）
+        const existing = await Draft.findOne({ userId: req.user.id, name });
+        if (existing) {
+            return res.status(400).json({ message: 'You already have a draft with this name.' });
+        }
+
+        // Create new draft 创建新草稿
         const draft = new Draft({
             userId: req.user.id,
             name,
@@ -39,6 +47,7 @@ router.post('/', authenticate, async (req, res) => {
             activeTexts,
             stickers
         });
+
         await draft.save();
         res.status(201).json(draft);
     } catch (error) {
@@ -46,7 +55,7 @@ router.post('/', authenticate, async (req, res) => {
     }
 });
 
-// 更新草稿
+// Update draft 更新草稿
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const draft = await Draft.findOneAndUpdate(
@@ -63,7 +72,7 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 });
 
-// 删除草稿
+// delete draft 删除草稿
 router.delete('/:id', authenticate, async (req, res) => {
     try {
         const draft = await Draft.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
