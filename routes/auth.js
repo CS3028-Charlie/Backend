@@ -120,7 +120,6 @@ router.post('/topup', authenticate, async (req, res) => {
 router.post('/deduct', authenticate, async (req, res) => {
   const { amount } = req.body;
   try {
-    
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -138,7 +137,7 @@ router.post('/deduct', authenticate, async (req, res) => {
     user.balance -= amount;
     await user.save();
 
-    res.json({ message: `Deducted ${amount} credits from ${email}`, newBalance: user.balance });
+    res.json({ message: `Deducted ${amount} credits from ${user.email}`, newBalance: user.balance });
   } catch (error) {
     console.error('Error deducting credits:', error);
     res.status(500).json({ message: 'Server error' });
