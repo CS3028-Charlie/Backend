@@ -20,20 +20,25 @@ const paymentsController = new paypal.PaymentsController(client);
 
 
 const createOrder = async (cart) => {
+    // get amount and currency from cart or set defaults
+    const amountValue = cart.amount;
+    const currencyCode = cart?.currency || "GBP";
     const collect = {
         body: {
             intent: "CAPTURE",
             purchaseUnits: [
                 {
                     amount: {
-                        currencyCode: "GBP",
-                        value: "100",
+                        currencyCode: currencyCode,
+                        value: amountValue,
                     },
                 },
             ],
         },
         prefer: "return=minimal",
-    }; 
+    };
+
+    console.log(collect.body);
 
     try {
         const { body, ...httpResponse } = await ordersController.ordersCreate(
@@ -58,7 +63,6 @@ router.post("/orders", async (req, res) => {
     try {
         // use the cart information passed from the front-end to calculate the order amount detals
         const { cart } = req.body;
-        console.log(cart)
         const { jsonResponse, httpStatusCode } = await createOrder(cart);
         res.status(httpStatusCode).json(jsonResponse);
     } catch (error) {
