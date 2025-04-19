@@ -117,6 +117,34 @@ router.post('/topup', authenticate, async (req, res) => {
   res.json({ message: `Added ${amount} credits to ${email}.`, newBalance: pupil.balance });
 });
 
+router.post('/deduct', authenticate, async (req, res) => {
+  const { amount } = req.body;
+  try {
+    
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid amount' });
+    }
+
+    if ((user.balance || 0) < amount) {
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+
+    user.balance -= amount;
+    await user.save();
+
+    res.json({ message: `Deducted ${amount} credits from ${email}`, newBalance: user.balance });
+  } catch (error) {
+    console.error('Error deducting credits:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Delete user account
 router.delete('/delete-account', authenticate, async (req, res) => {
     const { password } = req.body;
