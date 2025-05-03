@@ -55,28 +55,30 @@ app.use('/api/auth', authRoutes);
 const paypalRoutes = require('./routes/paypal.js');
 app.use('/api/payment', paypalRoutes);
 
+// Configure multer storage for file uploads
+// Dynamically creates directories based on card title
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     let path = `assets/templates/${req.body.title}`
-
-    // create directory if it doesnt exist
+    // Create directory if it doesn't exist to prevent upload errors
     if (!originalFs.existsSync(path)) {
       originalFs.mkdirSync(path, { recursive: true });
     }
-
     cb(null, path)
   },
   filename: (req, file, cb) => {
+    // Preserve original filename when storing
     cb(null, file.originalname)
   }
 })
 
+// Initialize multer with file size limit of 20MB
 const upload = multer({
   limits: { fileSize: 20000000}, // 20MB
   storage: storage
 })
 
-// Updated to use async/await with fs.promises
+// Fetch all available card templates from the templates directory
 app.get('/get_card_previews', async (req, res) => {
   try {
     const cardFolders = await fs.readdir("assets/templates");
@@ -87,11 +89,12 @@ app.get('/get_card_previews', async (req, res) => {
   }
 });
 
-// New route to count card templates
+// Count the number of card templates that start with 'card-'
 app.get('/assets/templates/count', async (req, res) => {
   try {
     const templatesDir = path.join(__dirname, 'assets/templates');
     const files = await fs.readdir(templatesDir);
+    // Filter for directories that start with 'card-'
     const folders = (await Promise.all(
       files.map(async file => {
         const stat = await fs.stat(path.join(templatesDir, file));
@@ -106,25 +109,24 @@ app.get('/assets/templates/count', async (req, res) => {
   }
 });
 
-// Updated to use async/await with fs.promises
+// Delete a card template and all its associated files
 app.post("/delete_card", async (req, res) => {
   const dir = req.body.card;
   const path = `assets/templates/${dir}`;
 
   try {
+    // Check if card exists before attempting deletion
     const cards = await fs.readdir("assets/templates");
     if (!cards.includes(req.body.card)) {
       return res.status(200).send("Card already deleted");
     }
 
     const files = await fs.readdir(path);
-    
-    // Delete all files in the directory
+    // Delete all files within the template directory
     await Promise.all(files.map(file => 
       fs.unlink(`${path}/${file}`)
     ));
-    
-    // Delete the directory
+    // Remove the empty directory
     await fs.rmdir(path);
     
     res.status(200).send("ok");
