@@ -60,9 +60,6 @@ Handles user authentication, card customization drafts, classroom management for
     # PayPal API Credentials (Sandbox or Production)
     PAYPAL_CLIENT_ID=your_paypal_client_id
     PAYPAL_CLIENT_SECRET=your_paypal_client_secret
-
-    # (Optional) PayPal Environment (Defaults to Sandbox if not set or invalid)
-    # PAYPAL_ENVIRONMENT=Sandbox # or 'Live' for production
     ```
 
 4.  **Run the server:**
